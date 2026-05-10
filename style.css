@@ -1,0 +1,281 @@
+/* === CSS 变量：把常用值集中管理，方便以后调整 === */
+:root {
+    --color-bg: #f7f8fa;
+    --color-card: #ffffff;
+    --color-text: #1f2937;
+    --color-text-muted: #6b7280;
+    --color-border: #e5e7eb;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+/* === 全局重置 === */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.7;
+    padding: 0 16px;
+}
+
+/* === 网站头部 === */
+.site-header {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 56px 0 32px;
+    text-align: center;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.site-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.site-header .subtitle {
+    color: var(--color-text-muted);
+    font-size: 16px;
+}
+
+/* === 主内容区 === */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 32px 0;
+}
+
+/* === 题目卡片 === */
+.problem-card {
+    background: var(--color-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 24px 28px;
+    margin-bottom: 20px;
+}
+
+.problem-meta {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.tag {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.tag-chapter {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.tag-difficulty {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.problem-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.problem-body p {
+    margin-bottom: 8px;
+}
+
+.problem-body p:last-child {
+    margin-bottom: 0;
+}
+
+/* === 解析（默认收起，点开展开） === */
+.problem-solution {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--color-border);
+}
+
+.problem-solution summary {
+    cursor: pointer;
+    color: var(--color-text-muted);
+    font-size: 14px;
+    user-select: none;
+}
+
+.problem-solution summary:hover {
+    color: var(--color-text);
+}
+
+.problem-solution[open] summary {
+    margin-bottom: 10px;
+}
+
+.problem-solution p {
+    margin-bottom: 8px;
+}
+
+/* === 网站底部 === */
+.site-footer {
+    max-width: 800px;
+    margin: 32px auto;
+    padding: 24px 0;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: 14px;
+    border-top: 1px solid var(--color-border);
+}
+/* === 筛选栏 === */
+.filters {
+    background: var(--color-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px 24px;
+    margin-bottom: 20px;
+}
+
+.filter-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 6px 0;
+}
+
+.filter-label {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    min-width: 40px;
+}
+
+.filter-btn {
+    background: transparent;
+    border: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-family: inherit;
+    font-size: 13px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.filter-btn:hover {
+    background: #f3f4f6;
+}
+
+.filter-btn.active {
+    background: #1f2937;
+    border-color: #1f2937;
+    color: white;
+}
+
+/* === 结果数量 === */
+.results-count {
+    font-size: 13px;
+    color: var(--color-text-muted);
+    margin-bottom: 14px;
+    padding: 0 4px;
+}
+
+/* === 空状态 === */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--color-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    color: var(--color-text-muted);
+    font-size: 15px;
+}
+
+/* === 搜索框 === */
+.search-row {
+    padding: 4px 0 12px;
+}
+
+.search-row input {
+    width: 100%;
+    font-family: inherit;
+    font-size: 15px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-bg);
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.search-row input:focus {
+    outline: none;
+    border-color: #1f2937;
+    background: white;
+}
+
+/* === 题目标题里的链接 === */
+.problem-title a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.problem-title a:hover {
+    color: #3b82f6;
+}
+
+/* === 返回链接 === */
+.back-link {
+    display: inline-block;
+    color: var(--color-text-muted);
+    text-decoration: none;
+    font-size: 14px;
+    margin-bottom: 16px;
+    padding: 4px 0;
+}
+
+.back-link:hover {
+    color: var(--color-text);
+}
+
+/* === 详情页 === */
+.problem-detail {
+    padding: 32px 36px;
+}
+
+.problem-detail .problem-title {
+    font-size: 22px;
+    margin-bottom: 16px;
+}
+
+.problem-detail .problem-body {
+    font-size: 17px;
+}
+
+.solution-detail {
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid var(--color-border);
+}
+
+.solution-detail h3 {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    margin-bottom: 12px;
+    letter-spacing: 0.5px;
+}
+
+.solution-detail p {
+    margin-bottom: 10px;
+}
+
+.solution-detail p:last-child {
+    margin-bottom: 0;
+}
