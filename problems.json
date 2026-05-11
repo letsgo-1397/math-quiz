@@ -11,26 +11,6 @@
     },
     {
         "id": 2,
-        "chapter": "导数与积分",
-        "difficulty": 2,
-        "body": "求 $\\displaystyle\\int_0^1 \\frac{1}{1+x^2} \\, dx$ 的值。",
-        "solution": [
-            "利用基本积分公式 $\\displaystyle\\int \\frac{1}{1+x^2}\\,dx = \\arctan x + C$。",
-            "所以原式 $= \\arctan x \\Big|_0^1 = \\arctan 1 - \\arctan 0 = \\dfrac{\\pi}{4}$。"
-        ]
-    },
-    {
-        "id": 3,
-        "chapter": "数列",
-        "difficulty": 3,
-        "body": "设 $\\{a_n\\}$ 为等差数列,$a_1 = 1$,$a_{10} = 19$。求 $\\displaystyle\\sum_{n=1}^{20} a_n$。",
-        "solution": [
-            "由 $a_{10} = a_1 + 9d$ 得 $d = 2$,故 $a_n = 2n - 1$。",
-            "$\\displaystyle\\sum_{n=1}^{20} a_n = \\frac{20(a_1 + a_{20})}{2} = \\frac{20 \\cdot (1 + 39)}{2} = 400$。"
-        ]
-    },
-    {
-        "id": 4,
         "chapter": "三角函数",
         "difficulty": 1,
         "body": "求 $\\sin\\dfrac{\\pi}{6} + \\cos\\dfrac{\\pi}{3}$ 的值。",
@@ -40,7 +20,7 @@
         ]
     },
     {
-        "id": 5,
+        "id": 3,
         "chapter": "函数与方程",
         "difficulty": 2,
         "body": "已知函数 $f(x) = x^2 - 4x + 3$,求 $f(x)$ 在区间 $[0, 3]$ 上的最小值。",
@@ -50,7 +30,7 @@
         ]
     },
     {
-    "id": 6,
+    "id": 4,
     "chapter": "立体几何",
     "difficulty": 2,
     "body": [
@@ -75,5 +55,17 @@
         "$\\cos\\langle \\vec{m}, \\vec{n} \\rangle = \\dfrac{\\vec{m} \\cdot \\vec{n}}{|\\vec{m}||\\vec{n}|} = \\dfrac{2}{1 \\times 3} = \\dfrac{2}{3}$。",
         "由图形,二面角 $B\\text{-}QD\\text{-}A$ 为锐角,故所求余弦值为 $\\dfrac{2}{3}$。"
     ]
+},
+{
+    "id": 5,
+    "chapter": "立体几何",
+    "difficulty": 3,
+    "body": [
+        "如图,四棱锥 $P\\text{-}ABCD$ 中,$PA \\perp$ 底面 $ABCD$,$PA = AC = 2$,$BC = 1$,$AB = \\sqrt{3}$。",
+        "(1) 若 $AD \\perp PB$,证明:$AD // \\text{平面 }PBC$;",
+        "(2) 若 $AD \\perp DC$,且二面角 $A\\text{-}CP\\text{-}D$ 的正弦值为 $\\dfrac{\\sqrt{42}}{7}$,求 $AD$。"
+    ],
+    "figure": "<svg viewBox='0 0 360 260' xmlns='http://www.w3.org/2000/svg' class='diagram'><line x1='90' y1='200' x2='165' y2='220' class='edge'/><line x1='165' y1='220' x2='275' y2='180' class='edge'/><line x1='90' y1='200' x2='275' y2='180' class='hidden'/><line x1='90' y1='200' x2='220' y2='145' class='hidden'/><line x1='220' y1='145' x2='275' y2='180' class='edge'/><line x1='140' y1='35' x2='90' y2='200' class='edge'/><line x1='140' y1='35' x2='165' y2='220' class='edge'/><line x1='140' y1='35' x2='275' y2='180' class='edge'/><line x1='140' y1='35' x2='220' y2='145' class='hidden'/><text x='132' y='28' class='label'>P</text><text x='78' y='205' class='label'>A</text><text x='160' y='238' class='label'>B</text><text x='282' y='186' class='label'>C</text><text x='222' y='142' class='label'>D</text></svg>",
+    "solution": []
 }
 ]
