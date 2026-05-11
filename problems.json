@@ -1,0 +1,52 @@
+[
+    {
+        "id": 1,
+        "chapter": "函数与方程",
+        "difficulty": 1,
+        "body": "解方程 $x^2 + 2x + 1 = 0$。",
+        "solution": [
+            "左边是完全平方式：$x^2 + 2x + 1 = (x+1)^2$。",
+            "所以方程化为 $(x+1)^2 = 0$,解得 $x = -1$(二重根)。"
+        ]
+    },
+    {
+        "id": 2,
+        "chapter": "导数与积分",
+        "difficulty": 2,
+        "body": "求 $\\displaystyle\\int_0^1 \\frac{1}{1+x^2} \\, dx$ 的值。",
+        "solution": [
+            "利用基本积分公式 $\\displaystyle\\int \\frac{1}{1+x^2}\\,dx = \\arctan x + C$。",
+            "所以原式 $= \\arctan x \\Big|_0^1 = \\arctan 1 - \\arctan 0 = \\dfrac{\\pi}{4}$。"
+        ]
+    },
+    {
+        "id": 3,
+        "chapter": "数列",
+        "difficulty": 3,
+        "body": "设 $\\{a_n\\}$ 为等差数列,$a_1 = 1$,$a_{10} = 19$。求 $\\displaystyle\\sum_{n=1}^{20} a_n$。",
+        "solution": [
+            "由 $a_{10} = a_1 + 9d$ 得 $d = 2$,故 $a_n = 2n - 1$。",
+            "$\\displaystyle\\sum_{n=1}^{20} a_n = \\frac{20(a_1 + a_{20})}{2} = \\frac{20 \\cdot (1 + 39)}{2} = 400$。"
+        ]
+    },
+    {
+        "id": 4,
+        "chapter": "三角函数",
+        "difficulty": 1,
+        "body": "求 $\\sin\\dfrac{\\pi}{6} + \\cos\\dfrac{\\pi}{3}$ 的值。",
+        "solution": [
+            "$\\sin\\dfrac{\\pi}{6} = \\dfrac{1}{2}$,$\\cos\\dfrac{\\pi}{3} = \\dfrac{1}{2}$。",
+            "所以原式 $= \\dfrac{1}{2} + \\dfrac{1}{2} = 1$。"
+        ]
+    },
+    {
+        "id": 5,
+        "chapter": "函数与方程",
+        "difficulty": 2,
+        "body": "已知函数 $f(x) = x^2 - 4x + 3$,求 $f(x)$ 在区间 $[0, 3]$ 上的最小值。",
+        "solution": [
+            "$f(x) = (x-2)^2 - 1$,对称轴为 $x = 2$,在区间 $[0, 3]$ 内。",
+            "因此最小值在 $x = 2$ 处取得,$f(2) = -1$。"
+        ]
+    }
+]

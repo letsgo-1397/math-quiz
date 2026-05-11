@@ -1,62 +1,8 @@
 // ======================================
-// 题目数据
+// 状态:problems 初始为空数组,fetch 完成后填充
 // ======================================
-const problems = [
-    {
-        id: 1,
-        chapter: "函数与方程",
-        difficulty: 1,
-        body: "解方程 $x^2 + 2x + 1 = 0$。",
-        solution: [
-            "左边是完全平方式：$x^2 + 2x + 1 = (x+1)^2$。",
-            "所以方程化为 $(x+1)^2 = 0$,解得 $x = -1$(二重根)。"
-        ]
-    },
-    {
-        id: 2,
-        chapter: "导数与积分",
-        difficulty: 2,
-        body: "求 $\\displaystyle\\int_0^1 \\frac{1}{1+x^2} \\, dx$ 的值。",
-        solution: [
-            "利用基本积分公式 $\\displaystyle\\int \\frac{1}{1+x^2}\\,dx = \\arctan x + C$。",
-            "所以原式 $= \\arctan x \\Big|_0^1 = \\arctan 1 - \\arctan 0 = \\dfrac{\\pi}{4}$。"
-        ]
-    },
-    {
-        id: 3,
-        chapter: "数列",
-        difficulty: 3,
-        body: "设 $\\{a_n\\}$ 为等差数列,$a_1 = 1$,$a_{10} = 19$。求 $\\displaystyle\\sum_{n=1}^{20} a_n$。",
-        solution: [
-            "由 $a_{10} = a_1 + 9d$ 得 $d = 2$,故 $a_n = 2n - 1$。",
-            "$\\displaystyle\\sum_{n=1}^{20} a_n = \\frac{20(a_1 + a_{20})}{2} = \\frac{20 \\cdot (1 + 39)}{2} = 400$。"
-        ]
-    },
-    {
-        id: 4,
-        chapter: "三角函数",
-        difficulty: 1,
-        body: "求 $\\sin\\dfrac{\\pi}{6} + \\cos\\dfrac{\\pi}{3}$ 的值。",
-        solution: [
-            "$\\sin\\dfrac{\\pi}{6} = \\dfrac{1}{2}$,$\\cos\\dfrac{\\pi}{3} = \\dfrac{1}{2}$。",
-            "所以原式 $= \\dfrac{1}{2} + \\dfrac{1}{2} = 1$。"
-        ]
-    },
-    {
-        id: 5,
-        chapter: "函数与方程",
-        difficulty: 2,
-        body: "已知函数 $f(x) = x^2 - 4x + 3$,求 $f(x)$ 在区间 $[0, 3]$ 上的最小值。",
-        solution: [
-            "$f(x) = (x-2)^2 - 1$,对称轴为 $x = 2$,在区间 $[0, 3]$ 内。",
-            "因此最小值在 $x = 2$ 处取得,$f(2) = -1$。"
-        ]
-    }
-];
+let problems = [];
 
-// ======================================
-// 状态
-// ======================================
 let currentFilters = {
     chapter: "all",
     difficulty: "all",
@@ -74,7 +20,6 @@ function getUniqueChapters() {
     return [...new Set(problems.map(p => p.chapter))];
 }
 
-// 让 KaTeX 渲染 body 里的所有公式
 function typesetMath() {
     renderMathInElement(document.body, {
         delimiters: [
@@ -86,9 +31,7 @@ function typesetMath() {
 }
 
 // ======================================
-// 路由:从 URL hash 解析当前应该显示哪个视图
-// "" 或 "#" → 列表
-// "#problem-3" → 第 3 道题详情
+// 路由
 // ======================================
 function getCurrentRoute() {
     const match = window.location.hash.match(/^#problem-(\d+)$/);
@@ -99,7 +42,7 @@ function getCurrentRoute() {
 }
 
 // ======================================
-// 筛选逻辑
+// 筛选
 // ======================================
 function getFilteredProblems() {
     return problems.filter(p => {
@@ -111,7 +54,6 @@ function getFilteredProblems() {
             const haystack = (p.body + " " + p.solution.join(" ") + " " + p.chapter).toLowerCase();
             if (!haystack.includes(keyword)) return false;
         }
-
         return true;
     });
 }
@@ -151,8 +93,7 @@ function renderFilterButtons() {
 }
 
 // ======================================
-// 渲染:单个题目卡片(列表里用)
-// 标题用 <a href="#problem-N"> 包起来,点击就跳详情
+// 渲染:单道题
 // ======================================
 function renderProblem(problem) {
     const solutionHTML = problem.solution.map(p => `<p>${p}</p>`).join("");
@@ -177,7 +118,7 @@ function renderProblem(problem) {
 }
 
 // ======================================
-// 渲染:题目列表(搜索/筛选时只重画这一块,搜索框焦点不丢)
+// 渲染:题目列表
 // ======================================
 function renderProblemList() {
     const filtered = getFilteredProblems();
@@ -193,7 +134,7 @@ function renderProblemList() {
 }
 
 // ======================================
-// 渲染:列表视图(整个列表页的骨架)
+// 渲染:列表视图
 // ======================================
 function renderListView() {
     document.getElementById("app").innerHTML = `
@@ -250,7 +191,7 @@ function renderDetailView(problemId) {
 }
 
 // ======================================
-// 主渲染:根据当前路由分发
+// 主渲染:根据路由分发
 // ======================================
 function render() {
     const route = getCurrentRoute();
@@ -262,17 +203,55 @@ function render() {
 }
 
 // ======================================
+// 数据加载:异步从 problems.json 读题
+// ======================================
+async function loadProblems() {
+    // 检测是否双击 HTML 打开(file:// 协议),给出明确提示
+    if (window.location.protocol === "file:") {
+        document.getElementById("app").innerHTML = `
+            <div class="empty-state">
+                <h3 style="margin-bottom: 12px;">需要通过 Live Server 打开</h3>
+                <p>这个项目现在用 fetch 加载数据,不能直接双击 HTML 文件。</p>
+                <p style="margin-top: 12px;">VS Code 里右键 index.html → "Open with Live Server"。</p>
+            </div>
+        `;
+        return;
+    }
+
+    try {
+        const response = await fetch("problems.json");
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        problems = await response.json();
+        render();
+    } catch (error) {
+        console.error("题目加载失败:", error);
+        document.getElementById("app").innerHTML = `
+            <div class="empty-state">
+                <h3 style="margin-bottom: 12px;">题目加载失败</h3>
+                <p style="font-size: 13px; color: #ef4444;">${error.message}</p>
+                <p style="margin-top: 12px;">请检查 <code>problems.json</code> 是否存在,以及 JSON 格式是否正确。</p>
+            </div>
+        `;
+    }
+}
+
+// ======================================
 // 初始化
 // ======================================
 document.addEventListener("DOMContentLoaded", function () {
-    render();
+    // 启动:加载数据,加载完会自动 render
+    loadProblems();
 
-    // URL hash 变化(浏览器前进/后退、点击 # 链接)
-    window.addEventListener("hashchange", render);
+    // hash 变化(数据没加载完时不动作)
+    window.addEventListener("hashchange", function () {
+        if (problems.length > 0) render();
+    });
 
     const appEl = document.getElementById("app");
 
-    // 筛选按钮点击(事件委托)
+    // 筛选按钮点击
     appEl.addEventListener("click", function (e) {
         const btn = e.target.closest(".filter-btn");
         if (!btn) return;
@@ -287,7 +266,7 @@ document.addEventListener("DOMContentLoaded", function () {
         renderProblemList();
     });
 
-    // 搜索框输入(事件委托;只重画列表,搜索框本身不动,焦点保留)
+    // 搜索框输入
     appEl.addEventListener("input", function (e) {
         if (e.target.id !== "search-input") return;
         currentFilters.search = e.target.value;
