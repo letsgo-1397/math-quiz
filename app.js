@@ -4,6 +4,93 @@
 let problems = [];
 let assignments = [];
 
+// ======================================
+// 访问验证
+// ======================================
+// 修改密码: 在浏览器控制台执行以下代码,把输出的哈希值替换下面的 PASSWORD_HASH
+//   crypto.subtle.digest('SHA-256', new TextEncoder().encode('你的新密码'))
+//     .then(h => console.log(Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2,'0')).join('')))
+const PASSWORD_HASH = "1fc2210b9be582476c36820060ac77f04f6b274bb00b06f0b7b2069dc9a0f99a";
+const AUTH_KEY = "math_quiz_auth";
+
+function isAuthed() {
+    return sessionStorage.getItem(AUTH_KEY) === "true";
+}
+
+const STORAGE_KEY = "math_quiz_problems";
+
+function loadProblemsFromStorage() {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+        problems = JSON.parse(raw);
+        return true;
+    }
+    return false;
+}
+
+function saveProblems() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(problems));
+}
+
+function getNextId() {
+    if (problems.length === 0) return 1;
+    const ids = problems.map(p => typeof p.id === "number" ? p.id : 0);
+    return Math.max(...ids) + 1;
+}
+
+function downloadProblemsJSON() {
+    const json = JSON.stringify(problems, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "problems_backup.json";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function confirmDeleteProblem(id) {
+    document.getElementById("app").insertAdjacentHTML("beforeend", `
+        <div class="modal-overlay" id="delete-confirm-modal">
+            <div class="modal modal-sm">
+                <div class="modal-header">
+                    <h2>确认删除</h2>
+                </div>
+                <div class="modal-body">
+                    <p>确定要删除 <strong>题目 ${id}</strong> 吗？此操作不可撤销。</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="delete-cancel">取消</button>
+                    <button class="btn btn-danger" id="delete-confirm">确认删除</button>
+                </div>
+            </div>
+        </div>
+    `);
+
+    function closeModal() {
+        document.getElementById("delete-confirm-modal").remove();
+    }
+
+    document.getElementById("delete-confirm-modal").addEventListener("click", function (e) {
+        if (e.target === this) closeModal();
+    });
+    document.getElementById("delete-cancel").addEventListener("click", closeModal);
+
+    document.getElementById("delete-confirm").addEventListener("click", function () {
+        problems = problems.filter(p => p.id !== id);
+        saveProblems();
+        closeModal();
+
+        // 刷新当前视图
+        const route = getCurrentRoute();
+        if (route.view === "problemDetail" && route.problemId === id) {
+            window.location.hash = "#";
+        } else {
+            render();
+        }
+    });
+}
+
 let currentFilters = {
     chapter: "all",
     difficulty: "all",
@@ -38,6 +125,51 @@ function bodyToHTML(body) {
 
 function figureToHTML(figure) {
     return figure ? `<div class="problem-figure">${figure}</div>` : "";
+}
+
+async function verifyPassword(input) {
+    const data = new TextEncoder().encode(input);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashHex = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+    return hashHex === PASSWORD_HASH;
+}
+
+function renderAuthPage() {
+    document.getElementById("app").innerHTML = `
+        <div class="auth-overlay">
+            <div class="auth-card">
+                <h2>请输入访问密码</h2>
+                <p class="auth-subtitle">本题库仅供内部使用</p>
+                <input type="password" id="auth-password" placeholder="输入密码" autofocus>
+                <button class="auth-btn" id="auth-submit">确 认</button>
+                <div class="auth-error" id="auth-error">密码错误，请重试</div>
+            </div>
+        </div>
+    `;
+
+    const input = document.getElementById("auth-password");
+    const submit = document.getElementById("auth-submit");
+    const error = document.getElementById("auth-error");
+
+    async function tryAuth() {
+        const ok = await verifyPassword(input.value);
+        if (ok) {
+            sessionStorage.setItem(AUTH_KEY, "true");
+            error.classList.remove("show");
+            loadData();
+        } else {
+            error.classList.add("show");
+            input.value = "";
+            input.focus();
+        }
+    }
+
+    submit.addEventListener("click", tryAuth);
+    input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") tryAuth();
+    });
 }
 
 // ======================================
@@ -122,6 +254,7 @@ function renderProblem(problem) {
             <div class="problem-meta">
                 <span class="tag tag-chapter">${problem.chapter}</span>
                 <span class="tag tag-difficulty">${difficultyStars(problem.difficulty)}</span>
+                <button class="btn-delete btn-delete-sm" data-problem-id="${problem.id}" title="删除">删除</button>
             </div>
             <h2 class="problem-title">
                 <a href="#problem-${problem.id}">题目 ${problem.id}</a>
@@ -172,6 +305,185 @@ function renderProblemInAssignment(problem, sourceTagHTML) {
 }
 
 // ======================================
+// 新增题目表单
+// ======================================
+function renderAddProblemForm() {
+    const chapters = getUniqueChapters();
+
+    document.getElementById("app").insertAdjacentHTML("beforeend", `
+        <div class="modal-overlay" id="add-problem-modal">
+            <div class="modal">
+                <div class="modal-header">
+                    <h2>新增题目</h2>
+                    <button class="modal-close" id="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group form-group-chapter">
+                            <label class="form-label">章节</label>
+                            <input class="form-input" id="form-chapter"
+                                   list="chapter-list" placeholder="选择或输入新章节" autocomplete="off">
+                            <datalist id="chapter-list">
+                                ${chapters.map(c => `<option value="${c}">`).join("")}
+                            </datalist>
+                        </div>
+                        <div class="form-group form-group-difficulty">
+                            <label class="form-label">难度</label>
+                            <div class="star-picker" id="star-picker">
+                                ${[1,2,3].map(i => `<span class="star-item" data-level="${i}">☆</span>`).join("")}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">题目内容 <span class="form-hint">（每行一个段落，支持 $...$ 公式）</span></label>
+                        <textarea class="form-textarea" id="form-body" rows="5" placeholder="输入题目内容..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">配图 SVG <span class="form-hint">（可选）</span></label>
+                        <textarea class="form-textarea form-textarea-sm" id="form-figure" rows="3" placeholder="粘贴 SVG 代码..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">解析 <span class="form-hint">（每行一个步骤，支持 $...$ 公式）</span></label>
+                        <textarea class="form-textarea" id="form-solution" rows="5" placeholder="输入解析步骤..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">实时预览</label>
+                        <div class="preview-box" id="form-preview">
+                            <p class="preview-placeholder">题目内容将在这里实时预览</p>
+                        </div>
+                    </div>
+                    <div class="form-error" id="form-error"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-cancel" id="modal-cancel">取消</button>
+                    <button class="btn btn-primary" id="modal-submit">提交</button>
+                </div>
+            </div>
+        </div>
+    `);
+
+    let selectedDifficulty = 1;
+
+    // 星级选择器
+    document.querySelectorAll(".star-item").forEach(star => {
+        star.addEventListener("click", function () {
+            selectedDifficulty = Number(this.dataset.level);
+            document.querySelectorAll(".star-item").forEach((s, i) => {
+                s.textContent = i < selectedDifficulty ? "★" : "☆";
+                s.classList.toggle("active", i < selectedDifficulty);
+            });
+        });
+        // 默认选中第一颗星
+        if (star.dataset.level === "1") {
+            star.textContent = "★";
+            star.classList.add("active");
+        }
+    });
+
+    const bodyTA = document.getElementById("form-body");
+    const figureTA = document.getElementById("form-figure");
+    const solutionTA = document.getElementById("form-solution");
+    const preview = document.getElementById("form-preview");
+    const error = document.getElementById("form-error");
+
+    function updatePreview() {
+        const bodyText = bodyTA.value.trim();
+        const solutionText = solutionTA.value.trim();
+        const figureText = figureTA.value.trim();
+
+        if (!bodyText && !solutionText) {
+            preview.innerHTML = `<p class="preview-placeholder">题目内容将在这里实时预览</p>`;
+            return;
+        }
+
+        let html = "";
+        if (bodyText) {
+            const bodyLines = bodyText.split("\n").filter(l => l.trim());
+            html += bodyLines.map(l => `<p>${l}</p>`).join("");
+        }
+        if (figureText) {
+            html += `<div class="problem-figure">${figureText}</div>`;
+        }
+        if (solutionText) {
+            html += `<hr style="margin:16px 0;border:none;border-top:1px dashed #e5e7eb;">`;
+            const solLines = solutionText.split("\n").filter(l => l.trim());
+            html += `<h3 style="font-size:14px;color:#6b7280;margin-bottom:8px;">解析</h3>`;
+            html += solLines.map(l => `<p>${l}</p>`).join("");
+        }
+        preview.innerHTML = html;
+        typesetMath();
+    }
+
+    let previewTimer;
+    function debouncedPreview() {
+        clearTimeout(previewTimer);
+        previewTimer = setTimeout(updatePreview, 300);
+    }
+
+    bodyTA.addEventListener("input", debouncedPreview);
+    figureTA.addEventListener("input", debouncedPreview);
+    solutionTA.addEventListener("input", debouncedPreview);
+
+    function closeModal() {
+        document.getElementById("add-problem-modal").remove();
+    }
+
+    document.getElementById("modal-close").addEventListener("click", closeModal);
+    document.getElementById("modal-cancel").addEventListener("click", closeModal);
+    document.getElementById("add-problem-modal").addEventListener("click", function (e) {
+        if (e.target === this) closeModal();
+    });
+
+    document.getElementById("modal-submit").addEventListener("click", function () {
+        const chapter = document.getElementById("form-chapter").value.trim();
+        const bodyRaw = bodyTA.value.trim();
+        const solutionRaw = solutionTA.value.trim();
+        const figureRaw = figureTA.value.trim();
+
+        // 验证
+        if (!chapter) {
+            error.textContent = "请填写章节";
+            error.classList.add("show");
+            return;
+        }
+        if (!bodyRaw) {
+            error.textContent = "请填写题目内容";
+            error.classList.add("show");
+            return;
+        }
+        if (!solutionRaw) {
+            error.textContent = "请填写解析";
+            error.classList.add("show");
+            return;
+        }
+
+        // 组装数据: body 单行 = 字符串, 多行 = 数组
+        const bodyLines = bodyRaw.split("\n").filter(l => l.trim());
+        const body = bodyLines.length === 1 ? bodyLines[0] : bodyLines;
+
+        const solutionLines = solutionRaw.split("\n").filter(l => l.trim());
+        const solution = solutionLines.length > 0 ? solutionLines : [];
+
+        const newProblem = {
+            id: getNextId(),
+            chapter: chapter,
+            difficulty: selectedDifficulty,
+            body: body,
+            solution: solution
+        };
+
+        if (figureRaw) {
+            newProblem.figure = figureRaw;
+        }
+
+        problems.push(newProblem);
+        saveProblems();
+        closeModal();
+        renderProblemListView();
+    });
+}
+
+// ======================================
 // 渲染:题库列表
 // ======================================
 function renderProblemList() {
@@ -189,10 +501,14 @@ function renderProblemList() {
 
 function renderProblemListView() {
     document.getElementById("app").innerHTML = `
+        <div class="toolbar">
+            <button class="btn btn-primary" id="btn-add-problem">+ 新增题目</button>
+            <button class="btn btn-secondary" id="btn-download-json">下载数据</button>
+        </div>
         <section class="filters">
             <div class="search-row">
-                <input type="search" id="search-input" 
-                       placeholder="搜索题目内容、章节、解析..." 
+                <input type="search" id="search-input"
+                       placeholder="搜索题目内容、章节、解析..."
                        value="${currentFilters.search}">
             </div>
             <div id="filter-buttons"></div>
@@ -228,6 +544,7 @@ function renderProblemDetailView(problemId) {
             <div class="problem-meta">
                 <span class="tag tag-chapter">${problem.chapter}</span>
                 <span class="tag tag-difficulty">${difficultyStars(problem.difficulty)}</span>
+                <button class="btn-delete" data-problem-id="${problem.id}">删除</button>
             </div>
             <h2 class="problem-title">题目 ${problem.id}</h2>
             <div class="problem-body">
@@ -373,6 +690,21 @@ async function loadData() {
         return;
     }
 
+    // 1. 先检查 localStorage 是否已有数据
+    if (loadProblemsFromStorage()) {
+        try {
+            const assignmentsRes = await fetch("assignments.json");
+            if (assignmentsRes.ok) {
+                assignments = await assignmentsRes.json();
+            }
+        } catch (e) {
+            console.error("作业数据加载失败:", e);
+        }
+        render();
+        return;
+    }
+
+    // 2. localStorage 为空,从 JSON 文件导入种子数据
     try {
         const [problemsRes, assignmentsRes] = await Promise.all([
             fetch("problems.json"),
@@ -384,6 +716,9 @@ async function loadData() {
 
         problems = await problemsRes.json();
         assignments = await assignmentsRes.json();
+
+        // 种子数据写入 localStorage
+        saveProblems();
 
         render();
     } catch (error) {
@@ -402,6 +737,11 @@ async function loadData() {
 // 初始化
 // ======================================
 document.addEventListener("DOMContentLoaded", function () {
+    if (!isAuthed()) {
+        renderAuthPage();
+        return;
+    }
+
     loadData();
 
     window.addEventListener("hashchange", function () {
@@ -411,6 +751,27 @@ document.addEventListener("DOMContentLoaded", function () {
     const appEl = document.getElementById("app");
 
     appEl.addEventListener("click", function (e) {
+        // 删除按钮
+        const deleteBtn = e.target.closest(".btn-delete");
+        if (deleteBtn) {
+            const problemId = Number(deleteBtn.dataset.problemId);
+            confirmDeleteProblem(problemId);
+            return;
+        }
+
+        // 新增题目按钮
+        if (e.target.id === "btn-add-problem") {
+            renderAddProblemForm();
+            return;
+        }
+
+        // 下载数据按钮
+        if (e.target.id === "btn-download-json") {
+            downloadProblemsJSON();
+            return;
+        }
+
+        // 筛选按钮
         const btn = e.target.closest(".filter-btn");
         if (!btn) return;
 
