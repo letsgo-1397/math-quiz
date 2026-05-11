@@ -1,7 +1,8 @@
 // ======================================
-// 状态:problems 初始为空数组,fetch 完成后填充
+// 状态
 // ======================================
 let problems = [];
+let assignments = [];
 
 let currentFilters = {
     chapter: "all",
@@ -30,13 +31,11 @@ function typesetMath() {
     });
 }
 
-// 把 body 字段统一变成段落 HTML(支持字符串或数组两种格式)
 function bodyToHTML(body) {
     const paragraphs = Array.isArray(body) ? body : [body];
     return paragraphs.map(p => `<p>${p}</p>`).join("");
 }
 
-// 把 figure 字段渲染成 HTML(没有就返回空字符串)
 function figureToHTML(figure) {
     return figure ? `<div class="problem-figure">${figure}</div>` : "";
 }
@@ -45,15 +44,21 @@ function figureToHTML(figure) {
 // 路由
 // ======================================
 function getCurrentRoute() {
-    const match = window.location.hash.match(/^#problem-(\d+)$/);
-    if (match) {
-        return { view: "detail", problemId: Number(match[1]) };
-    }
-    return { view: "list" };
+    const hash = window.location.hash;
+
+    let match = hash.match(/^#problem-(\d+)$/);
+    if (match) return { view: "problemDetail", problemId: Number(match[1]) };
+
+    match = hash.match(/^#assignment-(.+)$/);
+    if (match) return { view: "assignmentDetail", assignmentId: match[1] };
+
+    if (hash === "#assignments") return { view: "assignmentList" };
+
+    return { view: "problemList" };
 }
 
 // ======================================
-// 筛选
+// 筛选(题库列表用)
 // ======================================
 function getFilteredProblems() {
     return problems.filter(p => {
@@ -62,7 +67,6 @@ function getFilteredProblems() {
 
         const keyword = currentFilters.search.trim().toLowerCase();
         if (keyword) {
-            // 把 body 统一当数组处理,搜索也能命中多段题干
             const bodyText = Array.isArray(p.body) ? p.body.join(" ") : p.body;
             const haystack = (bodyText + " " + p.solution.join(" ") + " " + p.chapter).toLowerCase();
             if (!haystack.includes(keyword)) return false;
@@ -106,7 +110,7 @@ function renderFilterButtons() {
 }
 
 // ======================================
-// 渲染:单道题(列表里的卡片)
+// 渲染:单道题卡片(题库列表用)
 // ======================================
 function renderProblem(problem) {
     const bodyHTML = bodyToHTML(problem.body);
@@ -135,7 +139,40 @@ function renderProblem(problem) {
 }
 
 // ======================================
-// 渲染:题目列表
+// 渲染:作业里的题卡片(多了一个来源徽章)
+// ======================================
+function renderProblemInAssignment(problem, sourceTagHTML) {
+    const bodyHTML = bodyToHTML(problem.body);
+    const figureHTML = figureToHTML(problem.figure);
+    const solutionHTML = problem.solution.map(p => `<p>${p}</p>`).join("");
+
+    // 引用题(数字 id)做成可点链接,临时题(字符串 id)只显示文字
+    const titleHTML = typeof problem.id === "number"
+        ? `<a href="#problem-${problem.id}">题目 ${problem.id}</a>`
+        : `<span>${problem.id}</span>`;
+
+    return `
+        <article class="problem-card">
+            <div class="problem-meta">
+                ${sourceTagHTML}
+                <span class="tag tag-chapter">${problem.chapter}</span>
+                <span class="tag tag-difficulty">${difficultyStars(problem.difficulty)}</span>
+            </div>
+            <h2 class="problem-title">${titleHTML}</h2>
+            <div class="problem-body">
+                ${bodyHTML}
+                ${figureHTML}
+            </div>
+            <details class="problem-solution">
+                <summary>查看解析</summary>
+                ${solutionHTML}
+            </details>
+        </article>
+    `;
+}
+
+// ======================================
+// 渲染:题库列表
 // ======================================
 function renderProblemList() {
     const filtered = getFilteredProblems();
@@ -150,10 +187,7 @@ function renderProblemList() {
     typesetMath();
 }
 
-// ======================================
-// 渲染:列表视图
-// ======================================
-function renderListView() {
+function renderProblemListView() {
     document.getElementById("app").innerHTML = `
         <section class="filters">
             <div class="search-row">
@@ -171,14 +205,14 @@ function renderListView() {
 }
 
 // ======================================
-// 渲染:详情视图
+// 渲染:题目详情
 // ======================================
-function renderDetailView(problemId) {
+function renderProblemDetailView(problemId) {
     const problem = problems.find(p => p.id === problemId);
 
     if (!problem) {
         document.getElementById("app").innerHTML = `
-            <a href="#" class="back-link">← 返回列表</a>
+            <a href="#" class="back-link">← 返回题库</a>
             <div class="empty-state">题目不存在</div>
         `;
         return;
@@ -189,7 +223,7 @@ function renderDetailView(problemId) {
     const solutionHTML = problem.solution.map(p => `<p>${p}</p>`).join("");
 
     document.getElementById("app").innerHTML = `
-        <a href="#" class="back-link">← 返回列表</a>
+        <a href="#" class="back-link">← 返回题库</a>
         <article class="problem-card problem-detail">
             <div class="problem-meta">
                 <span class="tag tag-chapter">${problem.chapter}</span>
@@ -211,27 +245,128 @@ function renderDetailView(problemId) {
 }
 
 // ======================================
+// 渲染:作业列表
+// ======================================
+function renderAssignmentListView() {
+    const sorted = [...assignments].sort((a, b) => b.date.localeCompare(a.date));
+
+    const itemsHTML = sorted.map(a => {
+        // 计数:引用 + 内嵌
+        const count = (a.problemIds || []).length + (a.extraProblems || []).length;
+        return `
+            <a href="#assignment-${a.id}" class="assignment-card-link">
+                <article class="assignment-card">
+                    <div class="assignment-date">${a.date}</div>
+                    <h3 class="assignment-title">${a.title}</h3>
+                    ${a.note ? `<p class="assignment-note">${a.note}</p>` : ""}
+                    <div class="assignment-meta">共 ${count} 道题</div>
+                </article>
+            </a>
+        `;
+    }).join("");
+
+    document.getElementById("app").innerHTML = `
+        <div class="page-header">
+            <h2>作业</h2>
+            <p class="page-subtitle">每日布置的练习,按日期倒序</p>
+        </div>
+        ${itemsHTML || `<div class="empty-state">还没有作业</div>`}
+    `;
+}
+
+// ======================================
+// 渲染:作业详情(支持引用 + 内嵌混合)
+// ======================================
+function renderAssignmentDetailView(assignmentId) {
+    const assignment = assignments.find(a => a.id === assignmentId);
+
+    if (!assignment) {
+        document.getElementById("app").innerHTML = `
+            <a href="#assignments" class="back-link">← 返回作业列表</a>
+            <div class="empty-state">作业不存在</div>
+        `;
+        return;
+    }
+
+    // 从题库拿引用的题
+    const referenced = (assignment.problemIds || [])
+        .map(id => problems.find(p => p.id === id))
+        .filter(p => p !== undefined);
+
+    // 内嵌的题
+    const inline = assignment.extraProblems || [];
+
+    // 合并:引用题在前,内嵌题在后
+    const allProblems = [...referenced, ...inline];
+
+    // 缺失统计(引用了不存在的 id)
+    const requestedCount = (assignment.problemIds || []).length + inline.length;
+    const missingCount = requestedCount - allProblems.length;
+
+    // 每道题加来源徽章
+    const problemsHTML = allProblems.map((p, index) => {
+        const isInline = index >= referenced.length;
+        const sourceTag = isInline
+            ? `<span class="source-badge source-inline">临时题</span>`
+            : `<span class="source-badge source-ref">题库</span>`;
+        return renderProblemInAssignment(p, sourceTag);
+    }).join("");
+
+    document.getElementById("app").innerHTML = `
+        <a href="#assignments" class="back-link">← 返回作业列表</a>
+        <div class="assignment-header">
+            <div class="assignment-date-large">${assignment.date}</div>
+            <h2>${assignment.title}</h2>
+            ${assignment.note ? `<p class="assignment-note-large">${assignment.note}</p>` : ""}
+            <div class="assignment-meta-large">
+                共 ${allProblems.length} 道题${missingCount > 0 ? `(${missingCount} 道引用的题目数据缺失)` : ""}
+            </div>
+        </div>
+        <div id="problem-list">${problemsHTML}</div>
+    `;
+    typesetMath();
+    window.scrollTo(0, 0);
+}
+
+// ======================================
 // 主渲染:根据路由分发
 // ======================================
 function render() {
     const route = getCurrentRoute();
-    if (route.view === "detail") {
-        renderDetailView(route.problemId);
+    updateNavActiveState(route.view);
+
+    if (route.view === "problemDetail") {
+        renderProblemDetailView(route.problemId);
+    } else if (route.view === "assignmentList") {
+        renderAssignmentListView();
+    } else if (route.view === "assignmentDetail") {
+        renderAssignmentDetailView(route.assignmentId);
     } else {
-        renderListView();
+        renderProblemListView();
+    }
+}
+
+function updateNavActiveState(view) {
+    document.querySelectorAll(".nav-link").forEach(link => {
+        link.classList.remove("active");
+    });
+
+    if (view === "assignmentList" || view === "assignmentDetail") {
+        document.querySelector('.nav-link[href="#assignments"]')?.classList.add("active");
+    } else {
+        document.querySelector('.nav-link[href="#"]')?.classList.add("active");
     }
 }
 
 // ======================================
-// 数据加载:异步从 problems.json 读题
+// 数据加载:并行加载题库和作业
 // ======================================
-async function loadProblems() {
-    // 检测是否双击 HTML 打开(file:// 协议),给出明确提示
+async function loadData() {
     if (window.location.protocol === "file:") {
         document.getElementById("app").innerHTML = `
             <div class="empty-state">
                 <h3 style="margin-bottom: 12px;">需要通过 Live Server 打开</h3>
-                <p>这个项目现在用 fetch 加载数据,不能直接双击 HTML 文件。</p>
+                <p>这个项目用 fetch 加载数据,不能直接双击 HTML 文件。</p>
                 <p style="margin-top: 12px;">VS Code 里右键 index.html → "Open with Live Server"。</p>
             </div>
         `;
@@ -239,19 +374,25 @@ async function loadProblems() {
     }
 
     try {
-        const response = await fetch("problems.json");
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
-        problems = await response.json();
+        const [problemsRes, assignmentsRes] = await Promise.all([
+            fetch("problems.json"),
+            fetch("assignments.json")
+        ]);
+
+        if (!problemsRes.ok) throw new Error(`problems.json: HTTP ${problemsRes.status}`);
+        if (!assignmentsRes.ok) throw new Error(`assignments.json: HTTP ${assignmentsRes.status}`);
+
+        problems = await problemsRes.json();
+        assignments = await assignmentsRes.json();
+
         render();
     } catch (error) {
-        console.error("题目加载失败:", error);
+        console.error("数据加载失败:", error);
         document.getElementById("app").innerHTML = `
             <div class="empty-state">
-                <h3 style="margin-bottom: 12px;">题目加载失败</h3>
+                <h3 style="margin-bottom: 12px;">数据加载失败</h3>
                 <p style="font-size: 13px; color: #ef4444;">${error.message}</p>
-                <p style="margin-top: 12px;">请检查 <code>problems.json</code> 是否存在,以及 JSON 格式是否正确。</p>
+                <p style="margin-top: 12px;">请检查 JSON 文件是否存在,以及格式是否正确。</p>
             </div>
         `;
     }
@@ -261,17 +402,14 @@ async function loadProblems() {
 // 初始化
 // ======================================
 document.addEventListener("DOMContentLoaded", function () {
-    // 启动:加载数据,加载完会自动 render
-    loadProblems();
+    loadData();
 
-    // hash 变化(数据没加载完时不动作)
     window.addEventListener("hashchange", function () {
         if (problems.length > 0) render();
     });
 
     const appEl = document.getElementById("app");
 
-    // 筛选按钮点击
     appEl.addEventListener("click", function (e) {
         const btn = e.target.closest(".filter-btn");
         if (!btn) return;
@@ -286,7 +424,6 @@ document.addEventListener("DOMContentLoaded", function () {
         renderProblemList();
     });
 
-    // 搜索框输入
     appEl.addEventListener("input", function (e) {
         if (e.target.id !== "search-input") return;
         currentFilters.search = e.target.value;
