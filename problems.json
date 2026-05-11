@@ -48,5 +48,32 @@
             "$f(x) = (x-2)^2 - 1$,对称轴为 $x = 2$,在区间 $[0, 3]$ 内。",
             "因此最小值在 $x = 2$ 处取得,$f(2) = -1$。"
         ]
-    }
+    },
+    {
+    "id": 6,
+    "chapter": "立体几何",
+    "difficulty": 2,
+    "body": [
+        "在四棱锥 $Q\\text{-}ABCD$ 中,底面 $ABCD$ 是正方形,$AD = 2$,$QD = QA = \\sqrt{5}$,$QC = 3$。",
+        "(1) 证明:平面 $QAD \\perp$ 平面 $ABCD$;",
+        "(2) 求二面角 $B\\text{-}QD\\text{-}A$ 的平面角的余弦值。"
+    ],
+    "figure": "<svg viewBox='0 0 360 260' xmlns='http://www.w3.org/2000/svg' class='diagram'><polygon points='70,190 180,210 285,165 170,145' class='edge'/><line x1='215' y1='40' x2='70' y2='190' class='edge'/><line x1='215' y1='40' x2='180' y2='210' class='edge'/><line x1='215' y1='40' x2='285' y2='165' class='edge'/><line x1='215' y1='40' x2='170' y2='145' class='hidden'/><line x1='70' y1='190' x2='285' y2='165' class='hidden'/><text x='210' y='28' class='label'>Q</text><text x='52' y='202' class='label'>B</text><text x='178' y='232' class='label'>C</text><text x='292' y='171' class='label'>D</text><text x='155' y='142' class='label'>A</text></svg>",
+    "solution": [
+        "**(1) 证明平面 $QAD \\perp$ 平面 $ABCD$。**",
+        "取 $AD$ 中点 $O$,连接 $QO$。在等腰 $\\triangle QAD$ 中,$QA = QD = \\sqrt{5}$,$AD = 2$,所以 $QO \\perp AD$,且 $QO = \\sqrt{(\\sqrt{5})^2 - 1^2} = 2$。",
+        "在底面正方形中,连接 $OC$,由勾股定理 $OC = \\sqrt{OD^2 + DC^2} = \\sqrt{1 + 4} = \\sqrt{5}$。",
+        "在 $\\triangle QOC$ 中,$QO^2 + OC^2 = 4 + 5 = 9 = QC^2$,所以 $QO \\perp OC$。",
+        "由 $QO \\perp AD$,$QO \\perp OC$,且 $AD$ 与 $OC$ 都在平面 $ABCD$ 内且相交,所以 $QO \\perp$ 平面 $ABCD$。",
+        "又 $QO \\subset$ 平面 $QAD$,所以平面 $QAD \\perp$ 平面 $ABCD$。",
+        "**(2) 求二面角 $B\\text{-}QD\\text{-}A$ 的余弦值。**",
+        "以 $O$ 为原点,$OA$ 方向为 $x$ 轴,过 $O$ 且平行于 $DC$ 的方向为 $y$ 轴,$OQ$ 方向为 $z$ 轴,建立空间直角坐标系。",
+        "则 $A(1, 0, 0)$,$B(1, 2, 0)$,$D(-1, 0, 0)$,$Q(0, 0, 2)$。",
+        "$\\vec{DB} = (2, 2, 0)$,$\\vec{DQ} = (1, 0, 2)$。",
+        "设平面 $BQD$ 的法向量 $\\vec{n} = (x, y, z)$。由 $\\vec{n} \\cdot \\vec{DB} = 0 \\Rightarrow 2x + 2y = 0$,$\\vec{n} \\cdot \\vec{DQ} = 0 \\Rightarrow x + 2z = 0$。取 $z = 1$,得 $\\vec{n} = (-2, 2, 1)$。",
+        "平面 $AQD$ 在 $xOz$ 平面内,法向量取 $\\vec{m} = (0, 1, 0)$。",
+        "$\\cos\\langle \\vec{m}, \\vec{n} \\rangle = \\dfrac{\\vec{m} \\cdot \\vec{n}}{|\\vec{m}||\\vec{n}|} = \\dfrac{2}{1 \\times 3} = \\dfrac{2}{3}$。",
+        "由图形,二面角 $B\\text{-}QD\\text{-}A$ 为锐角,故所求余弦值为 $\\dfrac{2}{3}$。"
+    ]
+}
 ]

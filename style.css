@@ -279,3 +279,44 @@ body {
 .solution-detail p:last-child {
     margin-bottom: 0;
 }
+/* === 题目配图 === */
+.problem-figure {
+    margin: 16px 0;
+    text-align: center;
+}
+
+.problem-figure svg {
+    max-width: 100%;
+    height: auto;
+}
+
+/* 几何图统一样式 */
+.diagram .edge {
+    stroke: #222;
+    stroke-width: 2;
+    fill: none;
+}
+
+.diagram .hidden {
+    stroke: #222;
+    stroke-width: 2;
+    stroke-dasharray: 6 5;
+    fill: none;
+}
+
+.diagram .dashed {
+    stroke: #666;
+    stroke-width: 1.5;
+    stroke-dasharray: 4 3;
+    fill: none;
+}
+
+.diagram .label {
+    font-size: 18px;
+    font-family: "Times New Roman", serif;
+    fill: #111;
+}
+
+.diagram .point {
+    fill: #222;
+}

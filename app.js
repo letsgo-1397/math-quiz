@@ -30,6 +30,17 @@ function typesetMath() {
     });
 }
 
+// 把 body 字段统一变成段落 HTML(支持字符串或数组两种格式)
+function bodyToHTML(body) {
+    const paragraphs = Array.isArray(body) ? body : [body];
+    return paragraphs.map(p => `<p>${p}</p>`).join("");
+}
+
+// 把 figure 字段渲染成 HTML(没有就返回空字符串)
+function figureToHTML(figure) {
+    return figure ? `<div class="problem-figure">${figure}</div>` : "";
+}
+
 // ======================================
 // 路由
 // ======================================
@@ -51,7 +62,9 @@ function getFilteredProblems() {
 
         const keyword = currentFilters.search.trim().toLowerCase();
         if (keyword) {
-            const haystack = (p.body + " " + p.solution.join(" ") + " " + p.chapter).toLowerCase();
+            // 把 body 统一当数组处理,搜索也能命中多段题干
+            const bodyText = Array.isArray(p.body) ? p.body.join(" ") : p.body;
+            const haystack = (bodyText + " " + p.solution.join(" ") + " " + p.chapter).toLowerCase();
             if (!haystack.includes(keyword)) return false;
         }
         return true;
@@ -93,10 +106,13 @@ function renderFilterButtons() {
 }
 
 // ======================================
-// 渲染:单道题
+// 渲染:单道题(列表里的卡片)
 // ======================================
 function renderProblem(problem) {
+    const bodyHTML = bodyToHTML(problem.body);
+    const figureHTML = figureToHTML(problem.figure);
     const solutionHTML = problem.solution.map(p => `<p>${p}</p>`).join("");
+
     return `
         <article class="problem-card">
             <div class="problem-meta">
@@ -107,7 +123,8 @@ function renderProblem(problem) {
                 <a href="#problem-${problem.id}">题目 ${problem.id}</a>
             </h2>
             <div class="problem-body">
-                <p>${problem.body}</p>
+                ${bodyHTML}
+                ${figureHTML}
             </div>
             <details class="problem-solution">
                 <summary>查看解析</summary>
@@ -167,6 +184,8 @@ function renderDetailView(problemId) {
         return;
     }
 
+    const bodyHTML = bodyToHTML(problem.body);
+    const figureHTML = figureToHTML(problem.figure);
     const solutionHTML = problem.solution.map(p => `<p>${p}</p>`).join("");
 
     document.getElementById("app").innerHTML = `
@@ -178,7 +197,8 @@ function renderDetailView(problemId) {
             </div>
             <h2 class="problem-title">题目 ${problem.id}</h2>
             <div class="problem-body">
-                <p>${problem.body}</p>
+                ${bodyHTML}
+                ${figureHTML}
             </div>
             <div class="solution-detail">
                 <h3>解析</h3>
