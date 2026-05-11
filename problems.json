@@ -67,5 +67,48 @@
     ],
     "figure": "<svg viewBox='0 0 360 260' xmlns='http://www.w3.org/2000/svg' class='diagram'><line x1='90' y1='200' x2='165' y2='220' class='edge'/><line x1='165' y1='220' x2='275' y2='180' class='edge'/><line x1='90' y1='200' x2='275' y2='180' class='hidden'/><line x1='90' y1='200' x2='220' y2='145' class='hidden'/><line x1='220' y1='145' x2='275' y2='180' class='edge'/><line x1='140' y1='35' x2='90' y2='200' class='edge'/><line x1='140' y1='35' x2='165' y2='220' class='edge'/><line x1='140' y1='35' x2='275' y2='180' class='edge'/><line x1='140' y1='35' x2='220' y2='145' class='hidden'/><text x='132' y='28' class='label'>P</text><text x='78' y='205' class='label'>A</text><text x='160' y='238' class='label'>B</text><text x='282' y='186' class='label'>C</text><text x='222' y='142' class='label'>D</text></svg>",
     "solution": []
+},
+{
+    "id": 6,
+    "chapter": "立体几何",
+    "difficulty": 1,
+    "body": [
+        "定义法求二面角：假设 $P$ 是 $\\triangle ABC$ 所在平面外一点,而 $\\triangle PBC$ 和 $\\triangle ABC$ 都是边长为 $2$ 的正三角形,$PA = \\sqrt{6}$,那么二面角 $P\\text{-}BC\\text{-}A$ 的大小为（ ）",
+        "A. $30^\\circ$",
+        "B. $45^\\circ$",
+        "C. $60^\\circ$",
+        "D. $90^\\circ$"
+    ],
+    "figure": "<svg viewBox='0 0 400 300' xmlns='http://www.w3.org/2000/svg' class='diagram'><line x1='70' y1='235' x2='300' y2='240' class='edge'/><line x1='70' y1='235' x2='170' y2='155' class='hidden'/><line x1='170' y1='155' x2='300' y2='240' class='hidden'/><line x1='190' y1='40' x2='70' y2='235' class='edge'/><line x1='190' y1='40' x2='300' y2='240' class='edge'/><line x1='190' y1='40' x2='170' y2='155' class='hidden'/><line x1='170' y1='155' x2='220' y2='205' class='hidden'/><line x1='70' y1='235' x2='220' y2='205' class='hidden'/><line x1='190' y1='40' x2='220' y2='205' class='hidden'/><line x1='220' y1='205' x2='300' y2='240' class='hidden'/><text x='58' y='245' class='label'>A</text><text x='305' y='247' class='label'>B</text><text x='160' y='152' class='label'>C</text><text x='185' y='32' class='label'>P</text><text x='223' y='212' class='label'>O</text></svg>",
+    "solution": [
+        "答案：D",
+        "取 $BC$ 的中点 $O$,连接 $OA,OP$。",
+        "因为 $\\triangle PBC$ 和 $\\triangle ABC$ 都是边长为 $2$ 的正三角形,所以 $OA \\perp BC,OP \\perp BC$。",
+        "因此 $\\angle POA$ 为二面角 $P\\text{-}BC\\text{-}A$ 的平面角。",
+        "又因为 $OP = OA = \\sqrt{3},PA = \\sqrt{6}$,所以",
+        "$$OP^2 + OA^2 = PA^2$$",
+        "故 $\\angle POA = 90^\\circ$,即二面角 $P\\text{-}BC\\text{-}A$ 的大小为 $90^\\circ$。",
+        "故选：D。"
+    ]
+},
+{
+  "id": 7,
+  "chapter": "立体几何",
+  "difficulty": 1,
+  "body": [
+    "在正方体 $ABCD-A_1B_1C_1D_1$ 中, $AB=AD=AA_1=4$, 求二面角 $A_1-BD-C_1$ 的余弦值。"
+  ],
+  "figure": "<svg viewBox='0 0 400 300' xmlns='http://www.w3.org/2000/svg' class='diagram'><polygon points='80,220 180,220 220,180 120,180' class='edge'/><line x1='80' y1='220' x2='120' y2='180' class='hidden'/><polygon points='80,100 180,100 220,60 120,60' class='edge'/><line x1='80' y1='100' x2='80' y2='220' class='edge'/><line x1='180' y1='100' x2='180' y2='220' class='edge'/><line x1='220' y1='60' x2='220' y2='180' class='edge'/><line x1='120' y1='60' x2='120' y2='180' class='hidden'/><line x1='80' y1='100' x2='180' y2='220' class='edge'/><line x1='220' y1='60' x2='180' y2='220' class='edge'/><line x1='80' y1='100' x2='220' y2='60' class='hidden'/><line x1='120' y1='180' x2='180' y2='100' class='hidden'/><text x='60' y='235' class='label'>A</text><text x='185' y='235' class='label'>B</text><text x='230' y='190' class='label'>C</text><text x='105' y='175' class='label'>D</text><text x='60' y='95' class='label'>A₁</text><text x='185' y='95' class='label'>B₁</text><text x='230' y='55' class='label'>C₁</text><text x='105' y='55' class='label'>D₁</text></svg>",
+  "solution": [
+    "取 $BD$ 的中点 $O$, 连接 $A_1O$, $C_1O$, $A_1C_1$。",
+    "因为正方体 $ABCD-A_1B_1C_1D_1$ 中 $AB=AD=AA_1=4$,",
+    "所以 $BD=A_1C_1=A_1D=A_1B=BC_1=DC_1=\\sqrt{4^2+4^2}=4\\sqrt{2}$, 即 $BO=DO=2\\sqrt{2}$。",
+    "所以 $A_1O \\perp BD$, $C_1O \\perp BD$, 且 $A_1O=C_1O=\\sqrt{(4\\sqrt{2})^2-(2\\sqrt{2})^2}=2\\sqrt{6}$。",
+    "所以 $\\angle A_1OC_1$ 为二面角 $A_1-BD-C_1$ 的平面角。",
+    "由余弦定理：",
+    "$\\cos\\angle A_1OC_1=\\dfrac{(2\\sqrt{6})^2+(2\\sqrt{6})^2-(4\\sqrt{2})^2}{2 \\times (2\\sqrt{6})^2}=\\dfrac{1}{3}$。",
+    "故二面角 $A_1-BD-C_1$ 的余弦值为 $\\dfrac{1}{3}$。"
+  ]
 }
+
 ]
