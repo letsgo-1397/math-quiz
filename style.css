@@ -342,3 +342,69 @@ body {
     color: #b91c1c;
     border: 1px solid #fecaca;
 }
+/* === 题目配图(统一规格) === */
+.problem-figure {
+    margin: 18px auto;
+    display: flex;
+    justify-content: center;
+}
+
+.problem-figure svg {
+    /* 列表卡片里的尺寸 */
+    width: 100%;
+    max-width: 360px;
+    height: auto;
+}
+
+/* 详情页里图可以稍微大一点 */
+.problem-detail .problem-figure svg {
+    max-width: 460px;
+}
+
+/* === 几何图统一样式 === */
+.diagram .edge {
+    stroke: #1f2937;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+}
+
+.diagram .hidden {
+    stroke: #1f2937;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-dasharray: 6 4;
+    fill: none;
+}
+
+.diagram .dashed {
+    stroke: #6b7280;
+    stroke-width: 1.5;
+    stroke-dasharray: 4 3;
+    fill: none;
+}
+
+.diagram .label {
+    font-size: 17px;
+    font-family: "Times New Roman", "Cambria Math", serif;
+    font-style: italic;
+    fill: #111827;
+}
+
+.diagram .label-plain {
+    font-size: 14px;
+    font-family: -apple-system, "PingFang SC", sans-serif;
+    fill: #6b7280;
+}
+
+.diagram .point {
+    fill: #111827;
+}
+
+/* 移动端字号略大,看得清 */
+@media (max-width: 480px) {
+    .diagram .label {
+        font-size: 18px;
+    }
+}
