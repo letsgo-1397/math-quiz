@@ -473,6 +473,11 @@ body {
     gap: 12px;
 }
 
+.toolbar-admin {
+    display: flex;
+    gap: 8px;
+}
+
 /* === 通用按钮 === */
 .btn {
     font-family: inherit;
@@ -483,6 +488,16 @@ body {
     border-radius: 8px;
     cursor: pointer;
     transition: background 0.15s;
+}
+
+.btn-print {
+    background: var(--color-card);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+}
+
+.btn-print:hover {
+    background: #f3f4f6;
 }
 
 .btn-primary {
@@ -522,6 +537,30 @@ body {
     background: #dc2626;
 }
 
+/* === 编辑按钮 === */
+.btn-edit {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 10px;
+    background: transparent;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.btn-edit:hover {
+    background: #eff6ff;
+    border-color: #2563eb;
+}
+
+.btn-edit-sm {
+    font-size: 11px;
+    padding: 2px 8px;
+}
+
 /* === 删除按钮 === */
 .btn-delete {
     font-family: inherit;
@@ -534,6 +573,9 @@ body {
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.15s;
+}
+
+.btn-edit {
     margin-left: auto;
 }
 
@@ -845,5 +887,95 @@ body {
     .toolbar {
         flex-direction: column;
         align-items: stretch;
+    }
+}
+
+/* === 打印样式 === */
+@media print {
+    /* 隐藏一切UI + 解析 + 标签 */
+    .site-header,
+    .site-footer,
+    .site-nav,
+    .toolbar,
+    .filters,
+    .filter-row,
+    .search-row,
+    .back-link,
+    .btn-delete,
+    .btn-edit,
+    .btn-primary,
+    .btn-secondary,
+    .btn-cancel,
+    .btn-danger,
+    .auth-overlay,
+    .modal-overlay,
+    .results-count,
+    .form-error,
+    .problem-solution,
+    .solution-detail,
+    .problem-meta,
+    .assignment-header,
+    .source-badge {
+        display: none !important;
+    }
+
+    body {
+        background: white;
+        font-size: 13px;
+        line-height: 1.8;
+        color: #000;
+        padding: 0;
+    }
+
+    .container {
+        max-width: 100%;
+        padding: 0;
+        margin: 0;
+    }
+
+    .problem-card {
+        box-shadow: none;
+        border-radius: 0;
+        padding: 12px 0;
+        margin-bottom: 10px;
+        border-bottom: 1px solid #ddd;
+        page-break-inside: avoid;
+    }
+
+    .problem-detail {
+        border-bottom: none;
+    }
+
+    /* 题目标题 — 只保留编号 */
+    .problem-title {
+        font-size: 14px;
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+    .problem-title a {
+        color: #000;
+        text-decoration: none;
+    }
+
+    /* 题目正文 */
+    .problem-body {
+        font-size: 13px;
+    }
+
+    /* 配图统一放左下角 */
+    .problem-figure {
+        margin: 10px 0 0 0 !important;
+        display: flex !important;
+        justify-content: flex-start !important;
+    }
+    .problem-figure svg,
+    .problem-figure img {
+        max-width: 260px;
+        max-height: 180px;
+    }
+
+    @page {
+        size: A4;
+        margin: 15mm;
     }
 }

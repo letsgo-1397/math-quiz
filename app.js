@@ -7,14 +7,24 @@ let assignments = [];
 // ======================================
 // 访问验证
 // ======================================
-// 修改密码: 在浏览器控制台执行以下代码,把输出的哈希值替换下面的 PASSWORD_HASH
+// 修改密码: 在浏览器控制台执行以下代码,把输出的哈希值替换下面的哈希常量
 //   crypto.subtle.digest('SHA-256', new TextEncoder().encode('你的新密码'))
 //     .then(h => console.log(Array.from(new Uint8Array(h)).map(b => b.toString(16).padStart(2,'0')).join('')))
-const PASSWORD_HASH = "1fc2210b9be582476c36820060ac77f04f6b274bb00b06f0b7b2069dc9a0f99a";
+const TEACHER_PASSWORD_HASH = "1fc2210b9be582476c36820060ac77f04f6b274bb00b06f0b7b2069dc9a0f99a";
+const STUDENT_PASSWORD_HASH = "4f87674c124e626d51eb6a5342debbbdfd0867ada8735d319f89e17d32cb3a4c";
 const AUTH_KEY = "math_quiz_auth";
+const AUTH_ROLE_KEY = "math_quiz_role";
 
 function isAuthed() {
     return sessionStorage.getItem(AUTH_KEY) === "true";
+}
+
+function getRole() {
+    return sessionStorage.getItem(AUTH_ROLE_KEY) || "student";
+}
+
+function isTeacher() {
+    return getRole() === "teacher";
 }
 
 const STORAGE_KEY = "math_quiz_problems";
@@ -133,7 +143,9 @@ async function verifyPassword(input) {
     const hashHex = Array.from(new Uint8Array(hashBuffer))
         .map(b => b.toString(16).padStart(2, "0"))
         .join("");
-    return hashHex === PASSWORD_HASH;
+    if (hashHex === TEACHER_PASSWORD_HASH) return "teacher";
+    if (hashHex === STUDENT_PASSWORD_HASH) return "student";
+    return null;
 }
 
 function renderAuthPage() {
@@ -154,9 +166,10 @@ function renderAuthPage() {
     const error = document.getElementById("auth-error");
 
     async function tryAuth() {
-        const ok = await verifyPassword(input.value);
-        if (ok) {
+        const role = await verifyPassword(input.value);
+        if (role) {
             sessionStorage.setItem(AUTH_KEY, "true");
+            sessionStorage.setItem(AUTH_ROLE_KEY, role);
             error.classList.remove("show");
             loadData();
         } else {
@@ -254,7 +267,9 @@ function renderProblem(problem) {
             <div class="problem-meta">
                 <span class="tag tag-chapter">${problem.chapter}</span>
                 <span class="tag tag-difficulty">${difficultyStars(problem.difficulty)}</span>
-                <button class="btn-delete btn-delete-sm" data-problem-id="${problem.id}" title="删除">删除</button>
+                ${isTeacher() ? `
+                    <button class="btn-edit btn-edit-sm" data-problem-id="${problem.id}">编辑</button>
+                    <button class="btn-delete btn-delete-sm" data-problem-id="${problem.id}" title="删除">删除</button>` : ""}
             </div>
             <h2 class="problem-title">
                 <a href="#problem-${problem.id}">题目 ${problem.id}</a>
@@ -307,14 +322,17 @@ function renderProblemInAssignment(problem, sourceTagHTML) {
 // ======================================
 // 新增题目表单
 // ======================================
-function renderAddProblemForm() {
+function renderProblemForm(editProblem) {
     const chapters = getUniqueChapters();
+    const isEdit = !!editProblem;
+    const formTitle = isEdit ? `编辑题目 ${editProblem.id}` : "新增题目";
+    const submitLabel = isEdit ? "保存修改" : "提交";
 
     document.getElementById("app").insertAdjacentHTML("beforeend", `
         <div class="modal-overlay" id="add-problem-modal">
             <div class="modal">
                 <div class="modal-header">
-                    <h2>新增题目</h2>
+                    <h2>${formTitle}</h2>
                     <button class="modal-close" id="modal-close">&times;</button>
                 </div>
                 <div class="modal-body">
@@ -356,35 +374,46 @@ function renderAddProblemForm() {
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-cancel" id="modal-cancel">取消</button>
-                    <button class="btn btn-primary" id="modal-submit">提交</button>
+                    <button class="btn btn-primary" id="modal-submit">${submitLabel}</button>
                 </div>
             </div>
         </div>
     `);
-
-    let selectedDifficulty = 1;
-
-    // 星级选择器
-    document.querySelectorAll(".star-item").forEach(star => {
-        star.addEventListener("click", function () {
-            selectedDifficulty = Number(this.dataset.level);
-            document.querySelectorAll(".star-item").forEach((s, i) => {
-                s.textContent = i < selectedDifficulty ? "★" : "☆";
-                s.classList.toggle("active", i < selectedDifficulty);
-            });
-        });
-        // 默认选中第一颗星
-        if (star.dataset.level === "1") {
-            star.textContent = "★";
-            star.classList.add("active");
-        }
-    });
 
     const bodyTA = document.getElementById("form-body");
     const figureTA = document.getElementById("form-figure");
     const solutionTA = document.getElementById("form-solution");
     const preview = document.getElementById("form-preview");
     const error = document.getElementById("form-error");
+
+    let selectedDifficulty = editProblem ? editProblem.difficulty : 1;
+
+    // 预填编辑内容
+    if (isEdit) {
+        document.getElementById("form-chapter").value = editProblem.chapter;
+        const bodyText = Array.isArray(editProblem.body) ? editProblem.body.join("\n") : editProblem.body;
+        bodyTA.value = bodyText;
+        if (editProblem.figure) {
+            figureTA.value = editProblem.figure;
+        }
+        solutionTA.value = editProblem.solution.join("\n");
+    }
+
+    // 星级选择器
+    document.querySelectorAll(".star-item").forEach((star, i) => {
+        star.addEventListener("click", function () {
+            selectedDifficulty = Number(this.dataset.level);
+            document.querySelectorAll(".star-item").forEach((s, j) => {
+                s.textContent = j < selectedDifficulty ? "★" : "☆";
+                s.classList.toggle("active", j < selectedDifficulty);
+            });
+        });
+        // 根据 selectedDifficulty 设置初始状态
+        if (i < selectedDifficulty) {
+            star.textContent = "★";
+            star.classList.add("active");
+        }
+    });
 
     function updatePreview() {
         const bodyText = bodyTA.value.trim();
@@ -414,6 +443,9 @@ function renderAddProblemForm() {
         typesetMath();
     }
 
+    // 编辑时初始化预览
+    if (isEdit) updatePreview();
+
     let previewTimer;
     function debouncedPreview() {
         clearTimeout(previewTimer);
@@ -440,7 +472,6 @@ function renderAddProblemForm() {
         const solutionRaw = solutionTA.value.trim();
         const figureRaw = figureTA.value.trim();
 
-        // 验证
         if (!chapter) {
             error.textContent = "请填写章节";
             error.classList.add("show");
@@ -457,15 +488,14 @@ function renderAddProblemForm() {
             return;
         }
 
-        // 组装数据: body 单行 = 字符串, 多行 = 数组
         const bodyLines = bodyRaw.split("\n").filter(l => l.trim());
         const body = bodyLines.length === 1 ? bodyLines[0] : bodyLines;
 
         const solutionLines = solutionRaw.split("\n").filter(l => l.trim());
         const solution = solutionLines.length > 0 ? solutionLines : [];
 
-        const newProblem = {
-            id: getNextId(),
+        const problemData = {
+            id: isEdit ? editProblem.id : getNextId(),
             chapter: chapter,
             difficulty: selectedDifficulty,
             body: body,
@@ -473,13 +503,25 @@ function renderAddProblemForm() {
         };
 
         if (figureRaw) {
-            newProblem.figure = figureRaw;
+            problemData.figure = figureRaw;
         }
 
-        problems.push(newProblem);
+        if (isEdit) {
+            const index = problems.findIndex(p => p.id === editProblem.id);
+            problems[index] = problemData;
+        } else {
+            problems.push(problemData);
+        }
+
         saveProblems();
         closeModal();
-        renderProblemListView();
+
+        // 编辑后保持在当前视图，新增后跳回列表
+        if (isEdit) {
+            render();
+        } else {
+            renderProblemListView();
+        }
     });
 }
 
@@ -502,8 +544,12 @@ function renderProblemList() {
 function renderProblemListView() {
     document.getElementById("app").innerHTML = `
         <div class="toolbar">
-            <button class="btn btn-primary" id="btn-add-problem">+ 新增题目</button>
-            <button class="btn btn-secondary" id="btn-download-json">下载数据</button>
+            <button class="btn btn-print" id="btn-print">打印</button>
+            ${isTeacher() ? `
+            <span class="toolbar-admin">
+                <button class="btn btn-primary" id="btn-add-problem">+ 新增题目</button>
+                <button class="btn btn-secondary" id="btn-download-json">下载数据</button>
+            </span>` : ""}
         </div>
         <section class="filters">
             <div class="search-row">
@@ -539,12 +585,17 @@ function renderProblemDetailView(problemId) {
     const solutionHTML = problem.solution.map(p => `<p>${p}</p>`).join("");
 
     document.getElementById("app").innerHTML = `
-        <a href="#" class="back-link">← 返回题库</a>
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <a href="#" class="back-link">← 返回题库</a>
+            <button class="btn btn-print" id="btn-print">打印</button>
+        </div>
         <article class="problem-card problem-detail">
             <div class="problem-meta">
                 <span class="tag tag-chapter">${problem.chapter}</span>
                 <span class="tag tag-difficulty">${difficultyStars(problem.difficulty)}</span>
-                <button class="btn-delete" data-problem-id="${problem.id}">删除</button>
+                ${isTeacher() ? `
+                    <button class="btn-edit btn-edit-sm" data-problem-id="${problem.id}">编辑</button>
+                    <button class="btn-delete btn-delete-sm" data-problem-id="${problem.id}">删除</button>` : ""}
             </div>
             <h2 class="problem-title">题目 ${problem.id}</h2>
             <div class="problem-body">
@@ -751,6 +802,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const appEl = document.getElementById("app");
 
     appEl.addEventListener("click", function (e) {
+        // 打印按钮
+        if (e.target.id === "btn-print" || e.target.closest("#btn-print")) {
+            window.print();
+            return;
+        }
+
         // 删除按钮
         const deleteBtn = e.target.closest(".btn-delete");
         if (deleteBtn) {
@@ -761,7 +818,16 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // 新增题目按钮
         if (e.target.id === "btn-add-problem") {
-            renderAddProblemForm();
+            renderProblemForm();
+            return;
+        }
+
+        // 编辑题目按钮
+        const editBtn = e.target.closest(".btn-edit");
+        if (editBtn) {
+            const problemId = Number(editBtn.dataset.problemId);
+            const problem = problems.find(p => p.id === problemId);
+            if (problem) renderProblemForm(problem);
             return;
         }
 

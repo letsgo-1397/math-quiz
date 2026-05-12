@@ -1,8 +1,11 @@
 """
-从 problems.json 挑题目,生成 PDF。
+生成 PDF。
 
-用法:
+用法1 — 从题库按 ID 导出:
     python tools/export_pdf.py 1 3 6
+
+用法2 — 从 Markdown 文件导出:
+    python tools/export_pdf.py exports/数学练习.md
 """
 
 import json
@@ -42,16 +45,41 @@ def problem_to_markdown(problem):
     return "\n".join(lines)
 
 
-def main():
-    if len(sys.argv) < 2:
-        print("用法: python tools/export_pdf.py 1 3 6")
+def run_pandoc(md_path, pdf_path):
+    cmd = [
+        "pandoc",
+        str(md_path),
+        "-f", "markdown+tex_math_dollars",
+        "-o", str(pdf_path),
+        "--pdf-engine=xelatex",
+        "-V", "CJKmainfont=Microsoft YaHei",
+        "-V", "mainfont=Times New Roman",
+        "-V", "geometry:margin=2cm",
+        "-V", "fontsize=12pt",
+    ]
+    print(f"正在生成: {pdf_path.name}")
+    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
+    if result.returncode != 0:
+        print("生成失败:")
+        print(result.stderr)
         sys.exit(1)
+    print(f"完成 → {pdf_path}")
 
-    wanted_ids = [int(x) for x in sys.argv[1:]]
+
+def file_mode(md_path):
+    md_path = Path(md_path)
+    if not md_path.exists():
+        print(f"文件不存在: {md_path}")
+        sys.exit(1)
+    pdf_path = OUTPUT_DIR / md_path.with_suffix(".pdf").name
+    run_pandoc(md_path, pdf_path)
+
+
+def id_mode(ids):
     problems = json.loads(PROBLEMS_PATH.read_text(encoding="utf-8"))
 
     selected = []
-    for pid in wanted_ids:
+    for pid in ids:
         found = next((p for p in problems if p["id"] == pid), None)
         if found is None:
             print(f"警告:找不到题目 id = {pid}")
@@ -68,30 +96,25 @@ def main():
     md_path = OUTPUT_DIR / "_temp.md"
     md_path.write_text(markdown, encoding="utf-8")
 
-    pdf_name = "练习_" + "_".join(str(i) for i in wanted_ids) + ".pdf"
+    pdf_name = "练习_" + "_".join(str(i) for i in ids) + ".pdf"
     pdf_path = OUTPUT_DIR / pdf_name
+    run_pandoc(md_path, pdf_path)
 
-    cmd = [
-        "pandoc",
-        str(md_path),
-        "-f", "markdown+tex_math_dollars",      # 关键:启用 $...$ 数学公式
-        "-o", str(pdf_path),
-        "--pdf-engine=xelatex",
-        "-V", "CJKmainfont=Microsoft YaHei",
-        "-V", "mainfont=Times New Roman",
-        "-V", "geometry:margin=2cm",
-        "-V", "fontsize=12pt",
-    ]
 
-    print(f"正在生成: {pdf_path.name}")
-    result = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8")
-
-    if result.returncode != 0:
-        print("生成失败:")
-        print(result.stderr)
+def main():
+    if len(sys.argv) < 2:
+        print("用法:")
+        print("  python tools/export_pdf.py 1 3 6")
+        print("  python tools/export_pdf.py exports/数学练习.md")
         sys.exit(1)
 
-    print(f"完成 → {pdf_path}")
+    first_arg = sys.argv[1]
+
+    if first_arg.endswith(".md"):
+        file_mode(first_arg)
+    else:
+        ids = [int(x) for x in sys.argv[1:]]
+        id_mode(ids)
 
 
 if __name__ == "__main__":
